@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+        content="AESplat: Self-Supervised Pose-Free 3D Gaussian Splatting from Sparse Views">
+  <meta name="keywords" content="NVS, 3D Gaussian Splatting, Self-supervised Learning">
+  <meta name="author" content="Shiwei Ren">
+  <link rel="icon" href="./static/image/icon.png?v=2" type="image/png">
+  <title>AESplat</title>
+  <!-- <title>AESplat | Advancing Pose-free Feed-forward 3D Gaussian Splatting via Decoupled Appearance Modeling</title> -->
+
+  <!-- Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-PYVRSFMDRL');
+  </script>
+
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Project page styles -->
+  <link href="./static/css/main.css" rel="stylesheet">
+  <link href="./static/css/title-animations.css" rel="stylesheet">
+
+  <!-- 3D Gaussian (.glb) point-cloud viewer -->
+  <script type="module" src="./static/js/glb-viewer.js?v=6"></script>
+</head>
+
+<body>
+  <nav class="site-nav" aria-label="Primary navigation">
+    <div class="site-nav-inner">
+      <a class="site-nav-brand" href="#top">AESplat</a>
+      <div class="site-nav-links">
+        <a href="#tldr">TL;DR</a>
+        <a href="#demo">Demo</a>
+        <a href="#reconstruction">3D</a>
+        <a href="#abstract">Abstract</a>
+        <a href="#method">Method</a>
+        <a href="#results">Results</a>
+        <a href="#qualitative">Gallery</a>
+        <a href="#citation">Citation</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Cover -->
+  <section id="top">
+    <div class="jumbotron text-center mt-0">
+      <div class="container">
+        <div class="row">
+          <div class="col-12">
+            <h1>
+              <span class="title-neural">AESplat</span>:
+              <span class="title-resolution">Advancing Pose-free Feed-forward</span>
+              <span class="title-main">3D Gaussian Splatting</span>
+              <span class="title-finegrained">via Decoupled Appearance Modeling</span>
+            </h1>
+            <!-- <h4><span class="venue-badge">Arxiv 2026</span></h4> -->
+            <hr>
+            <div class="author-list">
+              <div class="author-row">
+                <a href="https://shiwei-ren.github.io/" target="_blank" rel="noopener noreferrer">Shiwei Ren</a>
+                Zhiang Liu
+                Yongchun Fang<sup>*</sup>
+                Hongwei Chen
+              </div>
+            </div>
+            <p>Nankai University</p>
+            <p class="author-note"><sup>*</sup>Corresponding author</p>
+
+            <div class="row justify-content-center mt-4">
+              <div class="column">
+                <p class="mb-3">
+                  <a class="btn btn-large btn-light"
+                     href="https://arxiv.org/abs/2508.01171"
+                     role="button" target="_blank" rel="noopener noreferrer">
+                    <i class="ai ai-arxiv"></i>Paper
+                  </a>
+                </p>
+              </div>
+              <div class="column">
+                <p class="mb-3">
+                  <a class="btn btn-large btn-light"
+                     href="https://github.com/ranrhuang/AESplat"
+                     role="button" target="_blank" rel="noopener noreferrer">
+                    <i class="fa fa-github"></i>Code
+                  </a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TL;DR -->
+  <section id="tldr">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <div class="section-card">
+            <h3 class="section-title">TL;DR</h3>
+            <ul>
+              <li>
+                <strong class="title-main">AESplat</strong> is an efficient feed-forward framework for
+                <span class="title-resolution">3D Gaussian Splatting</span> from sparse multi-view images,
+                requiring <strong>no ground-truth poses</strong> during training or inference.
+              </li>
+              <li>
+                A shared ViT backbone jointly predicts
+                <span class="title-finegrained">Gaussian primitives</span> and
+                <span class="title-neural">camera poses</span> in a canonical space within a single forward pass.
+              </li>
+              <li>
+                Despite the absence of pose supervision, AESplat achieves state-of-the-art novel view synthesis
+                under large viewpoint changes and limited overlap, and also improves relative pose estimation.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo -->
+  <section id="demo">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <div class="section-card">
+            <h3 class="section-title">Demo</h3>
+
+            <div class="demo-carousel" id="demo-carousel">
+              <button class="demo-nav-btn demo-prev" type="button" aria-label="Previous demo">
+                <i class="fa fa-chevron-left" aria-hidden="true"></i>
+              </button>
+
+              <div class="demo-carousel-viewport">
+                <!-- <div class="media-panel active" data-demo="dtu">
+                  <video src="./static/video/dtu_video.mp4" controls autoplay loop muted playsinline></video>
+                  <p class="media-caption">Qualitative comparison on DTU.</p>
+                </div> -->
+                <div class="media-panel active" data-demo="re10k1">
+                  <video src="./static/video/re10k_video1.mp4" controls autoplay loop muted playsinline></video>
+                  <p class="media-caption">Qualitative comparison on RealEstate10K.</p>
+                </div>
+                <div class="media-panel" data-demo="re10k2">
+                  <video src="./static/video/re10k_video2.mp4" controls loop muted playsinline></video>
+                  <p class="media-caption">Qualitative comparison on RealEstate10K.</p>
+                </div>
+                <div class="media-panel" data-demo="acid1">
+                  <video src="./static/video/acid_video1.mp4" controls loop muted playsinline></video>
+                  <p class="media-caption">Qualitative comparison on ACID.</p>
+                </div>
+                <div class="media-panel" data-demo="acid2">
+                  <video src="./static/video/acid_video2.mp4" controls loop muted playsinline></video>
+                  <p class="media-caption">Qualitative comparison on ACID.</p>
+                </div>
+                <div class="media-panel" data-demo="acid3">
+                  <video src="./static/video/acid_video3.mp4" controls loop muted playsinline></video>
+                  <p class="media-caption">Qualitative comparison on ACID.</p>
+                </div>
+                <div class="media-panel" data-demo="re10k-acid">
+                  <video src="./static/video/re10k_acid_video.mp4" controls loop muted playsinline></video>
+                  <p class="media-caption">Cross-dataset generalization: RealEstate10K → ACID.</p>
+                </div>
+                <div class="media-panel" data-demo="re10k-dl3dv">
+                  <video src="./static/video/re10k_dl3dv_video.mp4" controls loop muted playsinline></video>
+                  <p class="media-caption">Cross-dataset generalization: RealEstate10K → DL3DV.</p>
+                </div>
+              </div>
+
+              <button class="demo-nav-btn demo-next" type="button" aria-label="Next demo">
+                <i class="fa fa-chevron-right" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3D Reconstruction (.glb) -->
+  <section id="reconstruction">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <div class="section-card">
+            <h3 class="section-title">3D Reconstruction</h3>
+            <p class="section-body" id="glb-caption" style="text-align: center; margin-bottom: 1.1rem;">
+              Interactive 3D Gaussians exported as <code>.glb</code>
+              (<span id="glb-scene-name">RealEstate10K</span>).
+              Drag to orbit, scroll to zoom.
+            </p>
+
+            <div class="glb-carousel" id="glb-carousel">
+              <button class="demo-nav-btn demo-prev" type="button" id="glb-prev" aria-label="Previous 3D scene">
+                <i class="fa fa-chevron-left" aria-hidden="true"></i>
+              </button>
+
+              <div class="glb-carousel-viewport">
+                <div class="glb-slide active">
+                  <div class="glb-viewer-wrap">
+                    <div class="glb-canvas" data-src="./static/3D/re10k_4f9cd9513b61fb8a.glb"></div>
+                  </div>
+                  <div class="glb-viewer-wrap">
+                    <div class="glb-canvas" data-src="./static/3D/re10k_9dd571bfa9a0ef35.glb"></div>
+                  </div>
+                </div>
+
+                <div class="glb-slide">
+                  <div class="glb-viewer-wrap">
+                    <div class="glb-canvas" data-src="./static/3D/acid_85f1bf420e474d60.glb"></div>
+                  </div>
+                  <div class="glb-viewer-wrap">
+                    <div class="glb-canvas" data-src="./static/3D/acid_fbb3b9089e873acf.glb"></div>
+                  </div>
+                </div>
+
+                <div class="glb-slide">
+                  <div class="glb-viewer-wrap">
+                    <div class="glb-canvas" data-src="./static/3D/re10k_dl3dv_07d9f9724c.glb"></div>
+                  </div>
+                  <div class="glb-viewer-wrap">
+                    <div class="glb-canvas" data-src="./static/3D/re10k_dl3dv_f004c810d9.glb"></div>
+                  </div>
+                </div>
+
+                <div class="glb-slide">
+                  <div class="glb-viewer-wrap">
+                    <div class="glb-canvas" data-src="./static/3D/re10k_scannetpp_0529d56cce.glb"></div>
+                  </div>
+                  <div class="glb-viewer-wrap">
+                    <div class="glb-canvas" data-src="./static/3D/re10k_scannetpp_da8043d54e.glb"></div>
+                  </div>
+                </div>
+              </div>
+
+              <button class="demo-nav-btn demo-next" type="button" id="glb-next" aria-label="Next 3D scene">
+                <i class="fa fa-chevron-right" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <div class="glb-dots" id="glb-dots" aria-label="3D scene indicators">
+              <button class="glb-dot active" type="button" data-glb="0" aria-label="RealEstate10K"></button>
+              <button class="glb-dot" type="button" data-glb="1" aria-label="ACID"></button>
+              <button class="glb-dot" type="button" data-glb="2" aria-label="RealEstate10K to DL3DV"></button>
+              <button class="glb-dot" type="button" data-glb="3" aria-label="RealEstate10K to ScanNet++"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Abstract -->
+  <section id="abstract">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <div class="section-card">
+            <h3 class="section-title">Abstract</h3>
+            <p class="section-body" style="text-align: justify; margin-bottom: 0;">
+              We introduce <b>AESplat</b>, an efficient framework for 3D Gaussian splatting from sparse multi-view images, requiring <b>no ground-truth poses</b> during training or inference. It employs a shared feature extraction backbone, enabling simultaneous prediction of 3D Gaussian primitives and camera poses in a canonical space from unposed inputs within a single feed-forward step. Alongside the rendering loss based on estimated novel-view poses, a reprojection loss is integrated to enforce the learning of pixel-aligned Gaussian primitives for enhanced geometric constraints. This pose-free training paradigm and efficient one-step feed-forward design make AESplat well-suited for practical applications. Remarkably, despite the absence of pose supervision, AESplat achieves state-of-the-art performance in novel view synthesis even under significant viewpoint changes and limited image overlap. It also surpasses recent methods trained with geometry priors in relative pose estimation.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Method -->
+  <section id="method">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <div class="section-card">
+            <h3 class="section-title">Method</h3>
+            <div class="method-figure">
+              <img src="./static/image/pipeline.svg" alt="AESplat framework overview">
+            </div>
+            <p class="section-body" style="text-align: justify; margin-bottom: 0;">
+              <b>AESplat</b> consists of four main components: an encoder, a decoder, a pose head, and Gaussian prediction heads. These specialized heads are integrated into a shared ViT backbone, simultaneously predicting Gaussian centers, additional Gaussian parameters, and camera poses from unposed images in a canonical space, where the first input view serves as the reference. Only the context-only branch (above) is used during inference, while the context-with-target branch (below) is employed exclusively during training to estimate target poses, which are used for rendering loss supervision. Additionally, a reprojection loss enforces alignment between Gaussian centers and their corresponding pixels, using the estimated context poses from both branches. Our method jointly optimizes 3D Gaussians and poses, improving geometric consistency and reconstruction quality.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quantitative Results -->
+  <section id="results">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <div class="section-card">
+            <h3 class="section-title">Quantitative Results</h3>
+
+            <div class="stage-bar" id="table-stage-bar" style="margin-top: 0; margin-bottom: 1.1rem;">
+              <button class="stage-btn active" type="button" data-table="t1">RE10K / ACID</button>
+              <button class="stage-btn" type="button" data-table="t2">Cross-Dataset</button>
+              <button class="stage-btn" type="button" data-table="t3">Baseline Generality</button>
+            </div>
+
+            <!-- Table 1 -->
+            <div class="table-panel active" data-table="t1">
+              <table class="results-table">
+                <thead>
+                  <tr>
+                    <th rowspan="2">Method</th>
+                    <th colspan="3">RealEstate10K</th>
+                    <th colspan="3">ACID</th>
+                  </tr>
+                  <tr>
+                    <th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th>
+                    <th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td class="group-header" colspan="7"><i>Supervised Pose-required</i></td></tr>
+                  <tr>
+                    <td>pixelSplat</td>
+                    <td>23.859</td><td>0.808</td><td>0.184</td>
+                    <td>25.889</td><td>0.780</td><td>0.194</td>
+                  </tr>
+                  <tr>
+                    <td>MVSplat</td>
+                    <td>24.012</td><td>0.812</td><td>0.175</td>
+                    <td>25.561</td><td>0.775</td><td>0.195</td>
+                  </tr>
+                  <tr>
+                    <td>DepthSplat</td>
+                    <td>25.595</td><td>0.852</td><td>0.145</td>
+                    <td>-</td><td>-</td><td>-</td>
+                  </tr>
+                  <tr>
+                    <td>YoNoSplat</td>
+                    <td>24.233</td><td>0.813</td><td>0.162</td>
+                    <td>-</td><td>-</td><td>-</td>
+                  </tr>
+                  <tr><td class="group-header" colspan="7"><i>Supervised Pose-free</i></td></tr>
+                  <tr>
+                    <td>Splatt3R</td>
+                    <td>16.688</td><td>0.337</td><td>0.596</td>
+                    <td>18.060</td><td>0.510</td><td>0.407</td>
+                  </tr>
+                  <tr>
+                    <td>NoPoSplat</td>
+                    <td>25.033</td><td>0.838</td><td>0.160</td>
+                    <td>25.961</td><td>0.781</td><td>0.189</td>
+                  </tr>
+                  <tr><td class="group-header" colspan="7"><i>Self-Supervised Pose-free</i></td></tr>
+                  <tr>
+                    <td>SelfSplat</td>
+                    <td>19.152</td><td>0.680</td><td>0.328</td>
+                    <td>22.089</td><td>0.694</td><td>0.298</td>
+                  </tr>
+                  <tr>
+                    <td>PF3Splat</td>
+                    <td>21.042</td><td>0.739</td><td>0.233</td>
+                    <td>21.206</td><td>0.632</td><td>0.293</td>
+                  </tr>
+                  <tr>
+                    <td>SPFSplat</td>
+                    <td>25.484</td><td>0.847</td><td>0.153</td>
+                    <td>26.070</td><td>0.781</td><td>0.186</td>
+                  </tr>
+                  <tr>
+                    <td>SPFSplatV2-L</td>
+                    <td>25.668</td><td>0.855</td><td>0.137</td>
+                    <td>26.674</td><td>0.806</td><td>0.162</td>
+                  </tr>
+                  <tr>
+                    <td>NAS3R</td>
+                    <td><u>25.888</u></td><td><u>0.861</u></td><td><u>0.136</u></td>
+                    <td><u>26.832</u></td><td><u>0.813</u></td><td><u>0.160</u></td>
+                  </tr>
+                  <tr>
+                    <td class="our-method">AESplat (Ours)</td>
+                    <td><b>26.691</b></td><td><b>0.872</b></td><td><b>0.128</b></td>
+                    <td><b>27.679</b></td><td><b>0.825</b></td><td><b>0.151</b></td>
+                  </tr>
+                </tbody>
+              </table>
+              <p class="media-caption">
+                <strong>Table 1.</strong> Performance comparison of novel view synthesis on RealEstate10K and ACID.
+                We report the average metrics across all scenes.
+                <b>Best</b> and <u>second-best</u> are highlighted.
+                − indicates that the result was not reported in the original paper.
+              </p>
+            </div>
+
+            <!-- Table 2 -->
+            <div class="table-panel" data-table="t2">
+              <table class="results-table">
+                <thead>
+                  <tr>
+                    <th rowspan="2">Method</th>
+                    <th colspan="3">ACID</th>
+                    <th colspan="3">DL3DV</th>
+                    <th colspan="3">ScanNet++</th>
+                  </tr>
+                  <tr>
+                    <th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th>
+                    <th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th>
+                    <th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td class="group-header" colspan="10"><i>Supervised Pose-required</i></td></tr>
+                  <tr>
+                    <td>pixelSplat</td>
+                    <td>25.477</td><td>0.770</td><td>0.207</td>
+                    <td>18.688</td><td>0.582</td><td>0.354</td>
+                    <td>18.422</td><td>0.720</td><td>0.278</td>
+                  </tr>
+                  <tr>
+                    <td>MVSplat</td>
+                    <td>25.525</td><td>0.773</td><td>0.199</td>
+                    <td>17.786</td><td>0.545</td><td>0.357</td>
+                    <td>17.138</td><td>0.687</td><td>0.297</td>
+                  </tr>
+                  <tr>
+                    <td>DepthSplat</td>
+                    <td>26.012</td><td>0.791</td><td>0.185</td>
+                    <td>19.553</td><td>0.611</td><td>0.285</td>
+                    <td>20.775</td><td>0.760</td><td>0.254</td>
+                  </tr>
+                  <tr>
+                    <td>YoNoSplat</td>
+                    <td>24.246</td><td>0.721</td><td>0.222</td>
+                    <td>19.636</td><td>0.594</td><td>0.311</td>
+                    <td>21.075</td><td>0.744</td><td>0.254</td>
+                  </tr>
+                  <tr><td class="group-header" colspan="10"><i>Supervised Pose-free</i></td></tr>
+                  <tr>
+                    <td>NoPoSplat</td>
+                    <td>25.764</td><td>0.776</td><td>0.199</td>
+                    <td>19.974</td><td>0.612</td><td>0.305</td>
+                    <td><b>22.136</b></td><td>0.744</td><td>0.254</td>
+                  </tr>
+                  <tr><td class="group-header" colspan="10"><i>Self-Supervised Pose-free</i></td></tr>
+                  <tr>
+                    <td>SelfSplat</td>
+                    <td>22.204</td><td>0.686</td><td>0.316</td>
+                    <td>15.047</td><td>0.410</td><td>0.498</td>
+                    <td>13.277</td><td>0.538</td><td>0.534</td>
+                  </tr>
+                  <tr>
+                    <td>SPFSplat</td>
+                    <td>25.965</td><td>0.781</td><td>0.190</td>
+                    <td>19.172</td><td>0.573</td><td>0.315</td>
+                    <td>19.971</td><td>0.738</td><td>0.265</td>
+                  </tr>
+                  <tr>
+                    <td>SPFSplatV2-L</td>
+                    <td>26.361</td><td>0.796</td><td>0.169</td>
+                    <td>19.743</td><td>0.613</td><td>0.277</td>
+                    <td>21.796</td><td><u>0.811</u></td><td><u>0.200</u></td>
+                  </tr>
+                  <tr>
+                    <td>NAS3R</td>
+                    <td><u>26.663</u></td><td><u>0.807</u></td><td><u>0.166</u></td>
+                    <td><u>19.842</u></td><td><u>0.628</u></td><td><u>0.274</u></td>
+                    <td>21.028</td><td>0.799</td><td>0.210</td>
+                  </tr>
+                  <tr>
+                    <td class="our-method">AESplat (Ours)</td>
+                    <td><b>27.375</b></td><td><b>0.819</b></td><td><b>0.156</b></td>
+                    <td><b>20.430</b></td><td><b>0.648</b></td><td><b>0.259</b></td>
+                    <td><u>21.892</u></td><td><b>0.812</b></td><td><b>0.199</b></td>
+                  </tr>
+                </tbody>
+              </table>
+              <p class="media-caption">
+                <strong>Table 2.</strong> Cross-dataset generalization.
+                All methods are trained on RealEstate10K and evaluated in a zero-shot setting on ACID, DL3DV, and ScanNet++.
+                <b>Best</b> and <u>second-best</u> are highlighted.
+              </p>
+            </div>
+
+            <!-- Table 3 -->
+            <div class="table-panel" data-table="t3">
+              <table class="results-table">
+                <thead>
+                  <tr>
+                    <th rowspan="2">Method</th>
+                    <th colspan="3">RealEstate10K</th>
+                  </tr>
+                  <tr>
+                    <th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>NAS3R-m</td>
+                    <td>25.814</td><td>0.856</td><td>0.149</td>
+                  </tr>
+                  <tr>
+                    <td class="our-method">+Ours</td>
+                    <td><b>26.294</b></td><td><b>0.860</b></td><td><b>0.141</b></td>
+                  </tr>
+                  <tr>
+                    <td>SPFSplatV2</td>
+                    <td>25.693</td><td>0.853</td><td>0.149</td>
+                  </tr>
+                  <tr>
+                    <td class="our-method">+Ours</td>
+                    <td><b>26.181</b></td><td><b>0.859</b></td><td><b>0.141</b></td>
+                  </tr>
+                </tbody>
+              </table>
+              <p class="media-caption">
+                <strong>Table 3.</strong> Baseline Generality.
+                Our approach consistently improves the performance of different baselines.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Qualitative -->
+  <section id="qualitative">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <div class="section-card">
+            <h3 class="section-title">Qualitative Results</h3>
+
+            <div class="media-panel active" data-qual="q1">
+              <img src="./static/image/re10k.png" alt="Qualitative comparison on RE10K">
+              <p class="media-caption">Qualitative comparison on RE10K.</p>
+            </div>
+            <div class="media-panel" data-qual="q2">
+              <img src="./static/image/acid.png" alt="Qualitative comparison on ACID">
+              <p class="media-caption">Qualitative comparison on ACID.</p>
+            </div>
+            <div class="media-panel" data-qual="q3">
+              <img src="./static/image/cross_dataset.png" alt="Cross-dataset qualitative comparison">
+              <p class="media-caption">Cross-dataset generalization on DL3DV (first four rows), ACID (fifth and sixth rows), and ScanNet++ (last two rows).</p>
+            </div>
+
+            <div class="stage-bar" id="qual-stage-bar">
+              <button class="stage-btn active" type="button" data-qual="q1">RE10K</button>
+              <button class="stage-btn" type="button" data-qual="q2">ACID</button>
+              <button class="stage-btn" type="button" data-qual="q3">Cross-Dataset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Citation -->
+  <section id="citation">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <div class="section-card">
+            <h3 class="section-title">Citation</h3>
+            <div class="citation-wrap">
+              <pre id="citation-code"><code>@article{huang2025AESplat,
+  title={No Pose at All: Self-Supervised Pose-Free 3D Gaussian Splatting from Sparse Views},
+  author={Huang, Ranran and Mikolajczyk, Krystian},
+  journal={arXiv preprint arXiv:2508.01171},
+  year={2025}
+}</code></pre>
+              <button id="copy-citation-btn" class="copy-citation-btn" type="button" onclick="copyCitation()">
+                <i class="fa fa-copy"></i> Copy
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="text-center">
+    <p>
+      This website is adapted from the
+      <a href="https://zju3dv.github.io/InfiniSplat/" target="_blank" rel="noopener noreferrer">InfiniSplat</a>
+      /
+      <a href="https://zju3dv.github.io/InfiniDepth/" target="_blank" rel="noopener noreferrer">InfiniDepth</a>
+      project page template.
+    </p>
+  </footer>
+
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function setupStageSwitcher(barId, panelSelector, attrName) {
+      const bar = document.getElementById(barId);
+      if (!bar) return;
+      const buttons = Array.from(bar.querySelectorAll('.stage-btn'));
+      const panels = Array.from(document.querySelectorAll(panelSelector));
+
+      function activate(key) {
+        buttons.forEach(btn => btn.classList.toggle('active', btn.dataset[attrName] === key));
+        panels.forEach(panel => {
+          const isActive = panel.dataset[attrName] === key;
+          panel.classList.toggle('active', isActive);
+        });
+      }
+
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => activate(btn.dataset[attrName]));
+      });
+    }
+
+    function setupDemoCarousel() {
+      const root = document.getElementById('demo-carousel');
+      if (!root) return;
+      const panels = Array.from(root.querySelectorAll('.media-panel'));
+      const prevBtn = root.querySelector('.demo-prev');
+      const nextBtn = root.querySelector('.demo-next');
+      if (!panels.length || !prevBtn || !nextBtn) return;
+
+      let index = Math.max(0, panels.findIndex(p => p.classList.contains('active')));
+
+      function activate(i) {
+        index = (i + panels.length) % panels.length;
+        panels.forEach((panel, idx) => {
+          const isActive = idx === index;
+          panel.classList.toggle('active', isActive);
+          const video = panel.querySelector('video');
+          if (!video) return;
+          if (isActive) {
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+        });
+      }
+
+      prevBtn.addEventListener('click', () => activate(index - 1));
+      nextBtn.addEventListener('click', () => activate(index + 1));
+      activate(index);
+    }
+
+    setupDemoCarousel();
+    setupGlbCarousel();
+    setupStageSwitcher('table-stage-bar', '#results .table-panel', 'table');
+    setupStageSwitcher('qual-stage-bar', '#qualitative .media-panel', 'qual');
+
+    function setupGlbCarousel() {
+      const root = document.getElementById('glb-carousel');
+      if (!root) return;
+      const slides = Array.from(root.querySelectorAll('.glb-slide'));
+      const dots = Array.from(document.querySelectorAll('#glb-dots .glb-dot'));
+      const prevBtn = document.getElementById('glb-prev');
+      const nextBtn = document.getElementById('glb-next');
+      const sceneName = document.getElementById('glb-scene-name');
+      if (!slides.length) return;
+
+      const sceneNames = [
+        'RealEstate10K',
+        'ACID',
+        'RealEstate10K→DL3DV',
+        'RealEstate10K→ScanNet++',
+      ];
+
+      let index = Math.max(0, slides.findIndex(s => s.classList.contains('active')));
+
+      function goTo(n) {
+        index = (n + slides.length) % slides.length;
+        slides.forEach((slide, i) => slide.classList.toggle('active', i === index));
+        dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+        if (sceneName) {
+          sceneName.textContent = sceneNames[index] || sceneNames[0];
+        }
+        if (typeof window.bootGlbViewers === 'function') {
+          // Wait a frame so display:flex layout has non-zero size
+          requestAnimationFrame(() => window.bootGlbViewers());
+        }
+      }
+
+      if (prevBtn) prevBtn.addEventListener('click', () => goTo(index - 1));
+      if (nextBtn) nextBtn.addEventListener('click', () => goTo(index + 1));
+      dots.forEach(dot => {
+        dot.addEventListener('click', () => goTo(Number(dot.dataset.glb)));
+      });
+      goTo(index);
+    }
+
+    function copyCitation() {
+      const citationText = document.querySelector('#citation-code code').textContent;
+      const button = document.getElementById('copy-citation-btn');
+      navigator.clipboard.writeText(citationText).then(() => {
+        button.innerHTML = '<i class="fa fa-check"></i> Copied!';
+        button.style.background = '#4CAF50';
+        button.style.color = '#fff';
+        setTimeout(() => {
+          button.innerHTML = '<i class="fa fa-copy"></i> Copy';
+          button.style.background = '';
+          button.style.color = '';
+        }, 2000);
+      }).catch(err => console.error('Failed to copy:', err));
+    }
+
+    // Highlight active nav link while scrolling
+    const navLinks = Array.from(document.querySelectorAll('.site-nav-links a'));
+    const sections = navLinks
+      .map(link => document.querySelector(link.getAttribute('href')))
+      .filter(Boolean);
+
+    function updateActiveNav() {
+      const y = window.scrollY + 120;
+      let current = sections[0];
+      for (const section of sections) {
+        if (section.offsetTop <= y) current = section;
+      }
+      navLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + current.id);
+      });
+    }
+
+    window.addEventListener('scroll', updateActiveNav, { passive: true });
+    updateActiveNav();
+  </script>
+</body>
+</html>
