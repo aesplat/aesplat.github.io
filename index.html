@@ -45,7 +45,6 @@
         <a href="#method">Method</a>
         <a href="#results">Results</a>
         <a href="#qualitative">Gallery</a>
-        <a href="#citation">Citation</a>
       </div>
     </div>
   </nav>
@@ -62,39 +61,7 @@
               <span class="title-main">3D Gaussian Splatting</span>
               <span class="title-finegrained">via Decoupled Appearance Modeling</span>
             </h1>
-            <!-- <h4><span class="venue-badge">Arxiv 2026</span></h4> -->
-            <hr>
-            <div class="author-list">
-              <div class="author-row">
-                <a href="https://shiwei-ren.github.io/" target="_blank" rel="noopener noreferrer">Shiwei Ren</a>
-                Zhiang Liu
-                Yongchun Fang<sup>*</sup>
-                Hongwei Chen
-              </div>
-            </div>
-            <p>Nankai University</p>
-            <p class="author-note"><sup>*</sup>Corresponding author</p>
-
-            <div class="row justify-content-center mt-4">
-              <div class="column">
-                <p class="mb-3">
-                  <a class="btn btn-large btn-light"
-                     href="./AESplat.pdf"
-                     role="button" target="_blank" rel="noopener noreferrer">
-                    <i class="ai ai-arxiv"></i>Paper
-                  </a>
-                </p>
-              </div>
-              <div class="column">
-                <p class="mb-3">
-                  <a class="btn btn-large btn-light"
-                     href="#"
-                     role="button" aria-disabled="true">
-                    <i class="fa fa-github"></i>Code (Coming Soon)
-                  </a>
-                </p>
-              </div>
-            </div>
+            <h4><span class="venue-badge">Under Review</span></h4>
           </div>
         </div>
       </div>
@@ -593,40 +560,6 @@
     </div>
   </section>
 
-  <!-- Citation -->
-  <section id="citation">
-    <div class="container">
-      <div class="row">
-        <div class="col-12">
-          <div class="section-card">
-            <h3 class="section-title">Citation</h3>
-            <div class="citation-wrap">
-              <pre id="citation-code"><code>@article{ren2026aesplat,
-  title={AESplat: Advancing Pose-free Feed-forward 3D Gaussian Splatting via Decoupled Appearance Modeling},
-  author={Ren, Shiwei and Liu, Zhiang and Fang, Yongchun and Chen, Hongwei},
-  journal={Preprint},
-  year={2026}
-}</code></pre>
-              <button id="copy-citation-btn" class="copy-citation-btn" type="button" onclick="copyCitation()">
-                <i class="fa fa-copy"></i> Copy
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer class="text-center">
-    <p>
-      This website is adapted from the
-      <a href="https://zju3dv.github.io/InfiniSplat/" target="_blank" rel="noopener noreferrer">InfiniSplat</a>
-      /
-      <a href="https://zju3dv.github.io/InfiniDepth/" target="_blank" rel="noopener noreferrer">InfiniDepth</a>
-      project page template.
-    </p>
-  </footer>
-
   <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
@@ -724,21 +657,6 @@
         dot.addEventListener('click', () => goTo(Number(dot.dataset.glb)));
       });
       goTo(index);
-    }
-
-    function copyCitation() {
-      const citationText = document.querySelector('#citation-code code').textContent;
-      const button = document.getElementById('copy-citation-btn');
-      navigator.clipboard.writeText(citationText).then(() => {
-        button.innerHTML = '<i class="fa fa-check"></i> Copied!';
-        button.style.background = '#4CAF50';
-        button.style.color = '#fff';
-        setTimeout(() => {
-          button.innerHTML = '<i class="fa fa-copy"></i> Copy';
-          button.style.background = '';
-          button.style.color = '';
-        }, 2000);
-      }).catch(err => console.error('Failed to copy:', err));
     }
 
     // Highlight active nav link while scrolling
