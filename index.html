@@ -4,12 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description"
-        content="AESplat: Self-Supervised Pose-Free 3D Gaussian Splatting from Sparse Views">
-  <meta name="keywords" content="NVS, 3D Gaussian Splatting, Self-supervised Learning">
+        content="AESplat: Advancing Pose-free Feed-forward 3D Gaussian Splatting via Decoupled Appearance Modeling">
+  <meta name="keywords" content="NVS, 3D Gaussian Splatting, Pose-free, Appearance Modeling">
   <meta name="author" content="Shiwei Ren">
   <link rel="icon" href="./static/image/icon.png?v=2" type="image/png">
-  <title>AESplat</title>
-  <!-- <title>AESplat | Advancing Pose-free Feed-forward 3D Gaussian Splatting via Decoupled Appearance Modeling</title> -->
+  <title>AESplat | Advancing Pose-free Feed-forward 3D Gaussian Splatting via Decoupled Appearance Modeling</title>
 
   <!-- Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
@@ -80,7 +79,7 @@
               <div class="column">
                 <p class="mb-3">
                   <a class="btn btn-large btn-light"
-                     href="https://arxiv.org/abs/2508.01171"
+                     href="./AESplat.pdf"
                      role="button" target="_blank" rel="noopener noreferrer">
                     <i class="ai ai-arxiv"></i>Paper
                   </a>
@@ -89,9 +88,9 @@
               <div class="column">
                 <p class="mb-3">
                   <a class="btn btn-large btn-light"
-                     href="https://github.com/ranrhuang/AESplat"
-                     role="button" target="_blank" rel="noopener noreferrer">
-                    <i class="fa fa-github"></i>Code
+                     href="#"
+                     role="button" aria-disabled="true">
+                    <i class="fa fa-github"></i>Code (Coming Soon)
                   </a>
                 </p>
               </div>
@@ -111,18 +110,22 @@
             <h3 class="section-title">TL;DR</h3>
             <ul>
               <li>
-                <strong class="title-main">AESplat</strong> is an efficient feed-forward framework for
-                <span class="title-resolution">3D Gaussian Splatting</span> from sparse multi-view images,
-                requiring <strong>no ground-truth poses</strong> during training or inference.
+                <strong class="title-main">AESplat</strong> shifts from a unified appearance modeling paradigm
+                to a <span class="title-finegrained">decoupled</span> one for pose-free feed-forward
+                <span class="title-resolution">3D Gaussian Splatting</span>, substantially improving rendering quality.
               </li>
               <li>
-                A shared ViT backbone jointly predicts
-                <span class="title-finegrained">Gaussian primitives</span> and
-                <span class="title-neural">camera poses</span> in a canonical space within a single forward pass.
+                We propose an efficient decoupled appearance modeling strategy:
+                the zeroth-order SH coefficient (view-independent appearance) is derived directly from
+                input images without training (I2DC), while higher-order SH coefficients
+                (view-dependent appearance) are predicted by a shallow MLP with two 3D-aware
+                inductive biases: <span class="title-neural">GVSRE</span> and
+                <span class="title-neural">WCM</span>.
               </li>
               <li>
-                Despite the absence of pose supervision, AESplat achieves state-of-the-art novel view synthesis
-                under large viewpoint changes and limited overlap, and also improves relative pose estimation.
+                AESplat achieves state-of-the-art novel view synthesis, with a 0.8&nbsp;dB PSNR gain over
+                the pose-free method NAS3R and a 1.1&nbsp;dB gain over the pose-required method DepthSplat
+                on RealEstate10K.
               </li>
             </ul>
           </div>
@@ -270,7 +273,7 @@
           <div class="section-card">
             <h3 class="section-title">Abstract</h3>
             <p class="section-body" style="text-align: justify; margin-bottom: 0;">
-              We introduce <b>AESplat</b>, an efficient framework for 3D Gaussian splatting from sparse multi-view images, requiring <b>no ground-truth poses</b> during training or inference. It employs a shared feature extraction backbone, enabling simultaneous prediction of 3D Gaussian primitives and camera poses in a canonical space from unposed inputs within a single feed-forward step. Alongside the rendering loss based on estimated novel-view poses, a reprojection loss is integrated to enforce the learning of pixel-aligned Gaussian primitives for enhanced geometric constraints. This pose-free training paradigm and efficient one-step feed-forward design make AESplat well-suited for practical applications. Remarkably, despite the absence of pose supervision, AESplat achieves state-of-the-art performance in novel view synthesis even under significant viewpoint changes and limited image overlap. It also surpasses recent methods trained with geometry priors in relative pose estimation.
+              Pose-free feed-forward 3D Gaussian Splatting (3DGS) has demonstrated remarkable potential for generalized novel view synthesis. However, existing methods typically predict Gaussian appearance attributes represented by spherical harmonics (SH) in the same manner, overlooking the fundamental distinction between view-independent and view-dependent appearance, which results in suboptimal rendering quality. In this paper, we present <b>AESplat</b>, a novel and general framework for pose-free feed-forward 3DGS that introduces an effective decoupled appearance modeling strategy based on an analysis of SH, enabling higher-quality rendering. Specifically, AESplat directly derives the zeroth-order SH coefficient, which represents the base view-independent appearance component, from the input images without training. The higher-order SH coefficients are subsequently predicted by a shallow multilayer perceptron equipped with two efficient 3D-aware inductive biases to model view-dependent appearance variations. Extensive experiments across multiple datasets demonstrate that our method significantly outperforms state-of-the-art approaches, achieving a 0.8&nbsp;dB improvement in PSNR over the pose-free method NAS3R and a 1.1&nbsp;dB improvement over the pose-required method DepthSplat on the RealEstate10K dataset.
             </p>
           </div>
         </div>
@@ -286,10 +289,10 @@
           <div class="section-card">
             <h3 class="section-title">Method</h3>
             <div class="method-figure">
-              <img src="./static/image/pipeline.svg" alt="AESplat framework overview">
+              <img src="./static/image/pipeline.svg" alt="AESplat pipeline: decoupled appearance modeling with I2DC, GVSRE, and WCM">
             </div>
             <p class="section-body" style="text-align: justify; margin-bottom: 0;">
-              <b>AESplat</b> consists of four main components: an encoder, a decoder, a pose head, and Gaussian prediction heads. These specialized heads are integrated into a shared ViT backbone, simultaneously predicting Gaussian centers, additional Gaussian parameters, and camera poses from unposed images in a canonical space, where the first input view serves as the reference. Only the context-only branch (above) is used during inference, while the context-with-target branch (below) is employed exclusively during training to estimate target poses, which are used for rendering loss supervision. Additionally, a reprojection loss enforces alignment between Gaussian centers and their corresponding pixels, using the estimated context poses from both branches. Our method jointly optimizes 3D Gaussians and poses, improving geometric consistency and reconstruction quality.
+              Given unposed images, <b>AESplat</b> jointly predicts camera poses and Gaussian primitives in a single forward pass, with appearance attributes obtained through decoupled appearance modeling. Leveraging the strong observation provided by the input image itself, the zeroth-order SH coefficient of each pixel-aligned Gaussian is directly derived from its corresponding pixel RGB value via Image-to-Direct Component (I2DC), without training. Higher-order SH coefficients are predicted by a view-dependent appearance head that takes two effective 3D-aware inductive biases—Gaussian-to-Views Spatial Relation Embedding (GVSRE) and Warped Color Map (WCM)—enabling more accurate modeling of view-dependent appearance. Built upon a pose-free feed-forward backbone, this decoupled strategy produces higher-quality Gaussian representations and better novel-view rendering.
             </p>
           </div>
         </div>
@@ -392,9 +395,9 @@
                 </tbody>
               </table>
               <p class="media-caption">
-                <strong>Table 1.</strong> Performance comparison of novel view synthesis on RealEstate10K and ACID.
-                We report the average metrics across all scenes.
-                <b>Best</b> and <u>second-best</u> are highlighted.
+                <strong>Table 1.</strong> Performance comparison of novel view synthesis on RealEstate10K and ACID datasets.
+                We report the average metrics across all test scenes.
+                The <b>best</b> and <u>second-best</u> results are highlighted.
                 − indicates that the result was not reported in the original paper.
               </p>
             </div>
@@ -539,16 +542,16 @@
             <h3 class="section-title">Qualitative Results</h3>
 
             <div class="media-panel active" data-qual="q1">
-              <img src="./static/image/re10k.png" alt="Qualitative comparison on RE10K">
-              <p class="media-caption">Qualitative comparison on RE10K.</p>
+              <img src="./static/image/re10k.png" alt="Qualitative comparison on RealEstate10K">
+              <p class="media-caption">Qualitative comparison on RealEstate10K. The leftmost column shows the two-view context images.</p>
             </div>
             <div class="media-panel" data-qual="q2">
               <img src="./static/image/acid.png" alt="Qualitative comparison on ACID">
-              <p class="media-caption">Qualitative comparison on ACID.</p>
+              <p class="media-caption">Qualitative comparison on ACID. The leftmost column shows the two-view context images.</p>
             </div>
             <div class="media-panel" data-qual="q3">
               <img src="./static/image/cross_dataset.png" alt="Cross-dataset qualitative comparison">
-              <p class="media-caption">Cross-dataset generalization on DL3DV (first four rows), ACID (fifth and sixth rows), and ScanNet++ (last two rows).</p>
+              <p class="media-caption">Cross-dataset generalization (trained on RealEstate10K): DL3DV (first four rows), ACID (fifth and sixth rows), and ScanNet++ (last two rows).</p>
             </div>
 
             <div class="stage-bar" id="qual-stage-bar">
@@ -570,11 +573,11 @@
           <div class="section-card">
             <h3 class="section-title">Citation</h3>
             <div class="citation-wrap">
-              <pre id="citation-code"><code>@article{huang2025AESplat,
-  title={No Pose at All: Self-Supervised Pose-Free 3D Gaussian Splatting from Sparse Views},
-  author={Huang, Ranran and Mikolajczyk, Krystian},
-  journal={arXiv preprint arXiv:2508.01171},
-  year={2025}
+              <pre id="citation-code"><code>@article{ren2026aesplat,
+  title={AESplat: Advancing Pose-free Feed-forward 3D Gaussian Splatting via Decoupled Appearance Modeling},
+  author={Ren, Shiwei and Liu, Zhiang and Fang, Yongchun and Chen, Hongwei},
+  journal={Preprint},
+  year={2026}
 }</code></pre>
               <button id="copy-citation-btn" class="copy-citation-btn" type="button" onclick="copyCitation()">
                 <i class="fa fa-copy"></i> Copy
