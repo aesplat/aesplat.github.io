@@ -213,28 +213,6 @@
               <div class="glb-carousel-viewport">
                 <div class="glb-slide active">
                   <div class="glb-viewer-wrap">
-                    <div class="glb-canvas" data-src="./static/3D/re10k_4f9cd9513b61fb8a.glb"></div>
-                    <p class="media-caption">4f9cd9513b61fb8a</p>
-                  </div>
-                  <div class="glb-viewer-wrap">
-                    <div class="glb-canvas" data-src="./static/3D/re10k_b90f2c02287490e7.glb"></div>
-                    <p class="media-caption">b90f2c02287490e7</p>
-                  </div>
-                </div>
-
-                <div class="glb-slide">
-                  <div class="glb-viewer-wrap">
-                    <div class="glb-canvas" data-src="./static/3D/re10k_2cf1a544b179b1a7.glb"></div>
-                    <p class="media-caption">2cf1a544b179b1a7</p>
-                  </div>
-                  <div class="glb-viewer-wrap">
-                    <div class="glb-canvas" data-src="./static/3D/re10k_48aff7218b00d843.glb"></div>
-                    <p class="media-caption">48aff7218b00d843</p>
-                  </div>
-                </div>
-
-                <div class="glb-slide">
-                  <div class="glb-viewer-wrap">
                     <div class="glb-canvas" data-src="./static/3D/re10k_82825e3929be2062.glb"></div>
                     <p class="media-caption">82825e3929be2062</p>
                   </div>
@@ -257,12 +235,28 @@
 
                 <div class="glb-slide">
                   <div class="glb-viewer-wrap">
-                    <div class="glb-canvas" data-src="./static/3D/re10k_365cc620c2fcbb05.glb"></div>
-                    <p class="media-caption">365cc620c2fcbb05</p>
+                    <div class="glb-canvas" data-src="./static/3D/acid_85f1bf420e474d60.glb"></div>
                   </div>
                   <div class="glb-viewer-wrap">
-                    <div class="glb-canvas" data-src="./static/3D/re10k_59bfa3dceffc42b6.glb"></div>
-                    <p class="media-caption">59bfa3dceffc42b6</p>
+                    <div class="glb-canvas" data-src="./static/3D/acid_fbb3b9089e873acf.glb"></div>
+                  </div>
+                </div>
+
+                <div class="glb-slide">
+                  <div class="glb-viewer-wrap">
+                    <div class="glb-canvas" data-src="./static/3D/re10k_dl3dv_07d9f9724c.glb"></div>
+                  </div>
+                  <div class="glb-viewer-wrap">
+                    <div class="glb-canvas" data-src="./static/3D/re10k_dl3dv_f004c810d9.glb"></div>
+                  </div>
+                </div>
+
+                <div class="glb-slide">
+                  <div class="glb-viewer-wrap">
+                    <div class="glb-canvas" data-src="./static/3D/re10k_scannetpp_0529d56cce.glb"></div>
+                  </div>
+                  <div class="glb-viewer-wrap">
+                    <div class="glb-canvas" data-src="./static/3D/re10k_scannetpp_da8043d54e.glb"></div>
                   </div>
                 </div>
               </div>
@@ -275,9 +269,9 @@
             <div class="glb-dots" id="glb-dots" aria-label="3D scene indicators">
               <button class="glb-dot active" type="button" data-glb="0" aria-label="RealEstate10K 1"></button>
               <button class="glb-dot" type="button" data-glb="1" aria-label="RealEstate10K 2"></button>
-              <button class="glb-dot" type="button" data-glb="2" aria-label="RealEstate10K 3"></button>
-              <button class="glb-dot" type="button" data-glb="3" aria-label="RealEstate10K 4"></button>
-              <button class="glb-dot" type="button" data-glb="4" aria-label="RealEstate10K 5"></button>
+              <button class="glb-dot" type="button" data-glb="2" aria-label="ACID"></button>
+              <button class="glb-dot" type="button" data-glb="3" aria-label="RealEstate10K to DL3DV"></button>
+              <button class="glb-dot" type="button" data-glb="4" aria-label="RealEstate10K to ScanNet++"></button>
             </div>
           </div>
         </div>
@@ -689,9 +683,9 @@
       const sceneNames = [
         'RealEstate10K',
         'RealEstate10K',
-        'RealEstate10K',
-        'RealEstate10K',
-        'RealEstate10K',
+        'ACID',
+        'RealEstate10K→DL3DV',
+        'RealEstate10K→ScanNet++',
       ];
 
       let index = Math.max(0, slides.findIndex(s => s.classList.contains('active')));
